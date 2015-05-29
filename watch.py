@@ -6,6 +6,7 @@ import urllib2
 import time
 import requests
 import re
+import sys
 
 import smtplib
 from email.mime.text import MIMEText
@@ -52,27 +53,60 @@ def getPrice(data):
     print(result)
     return result
 
-def sendMail(addr):
-    msg = MIMEText("hello from python")
+def sendGMail(mailAddr, passwd, text):
+    gmail_user = mailAddr
+    gmail_pwd = passwd
+    FROM = 'user@gmail.com'
+    TO = [mailAddr] #send to self
+    SUBJECT = "Good prices"
 
-    me = addr
-    you = addr
-    msg['Subject'] = 'test subject'
-    msg['From'] = me
-    msg['To'] = you
+    # Prepare actual message
+    message = """\From: %s\nTo: %s\nSubject: %s\n\n%s
+    """ % (FROM, ", ".join(TO), SUBJECT, text)
+    try:
+        #server = smtplib.SMTP(SERVER) 
+        server = smtplib.SMTP("smtp.gmail.com", 587) #or port 465 doesn't seem to work!
+        server.ehlo()
+        server.starttls()
+        server.login(gmail_user, gmail_pwd)
+        server.sendmail(FROM, TO, message)
+        #server.quit()
+        server.close()
+        print 'successfully sent the mail'
+    except:
+        print "failed to send mail"
 
-    # Send the message via our own SMTP server, but don't include the
-    # envelope header.
-    s = smtplib.SMTP('127.0.0.1')
-    s.sendmail(me, [you], msg.as_string())
-    s.quit()
 
-while(True):
-#20692491682
-    data = store(42202954800, True)
-    prices = getPrice(data)
-    sendMail('yourmailAddr')
-    #need handle page
-    break
-    #time.sleep(10)
+def send163Mail(receiver, title, body):
+        host = 'smtp.163.com'
+        port = 25
+        sender = 'xx@xx.com'
+        pwd = 'XXXXXX'
 
+        msg = MIMEText(body, 'html')
+        msg['subject'] = title
+        msg['from'] = sender
+        msg['to'] = receiver
+
+        s = smtplib.SMTP(host, port)
+        s.login(sender, pwd)
+        s.sendmail(sender, receiver, msg.as_string())
+
+        print 'The mail named %s to %s is sended successly.' % (title, receiver)
+
+def main(argv):
+    mailAddr, passwd = argv
+    print(mailAddr, passwd)
+
+    while(True):
+    #20692491682
+        data = store(42202954800, True)
+        prices = getPrice(data)
+        sendGMail(mailAddr, passwd, prices)
+        #need handle page
+        break
+        #time.sleep(10)
+
+
+if __name__ == "__main__":
+   main(sys.argv[1:])
